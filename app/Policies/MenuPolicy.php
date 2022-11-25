@@ -84,7 +84,15 @@ class MenuPolicy
      */
     public function delete(User $user, Menu $menu)
     {
-        //
+        $perms = $user->role->permissions->all();
+
+        foreach($perms as $perm) {
+            if($perm->name == 'Menu-delete') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

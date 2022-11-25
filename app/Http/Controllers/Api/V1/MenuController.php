@@ -154,6 +154,17 @@ class MenuController extends Controller
     // Save Sous Menu
     public function saveSmenu(Request $request)
     {
+        //if auth user do not have 'Menu-create' permission
+
+
+        if(Auth::user()->cannot('create', SousMenu::class)) {
+            return response()->json([
+                'response_index' => true,
+                'response_type' => 'Error',
+                'response_message' => ['You are not authorized to create new sub menu'],
+            ]);
+        }
+
         try {
             $q = new SousMenu;
             $q->name_sous_menu = $request->input('name_sous_menu');
@@ -165,14 +176,17 @@ class MenuController extends Controller
 
             $q->save();
             return response([
-                'success' => true,
-                'data' => $q
+                'response_index' => 'true',
+                'response_type' => 'Success',
+                'response_message' => ['New Sub Menu Created Successfully'],
+                'last_created' => SousMenu::orderBy('created_at', 'desc')->first()
             ]);
         } catch (\Exception $exception) {
             return response([
-                'success' => false,
-                'message' => $exception->getMessage()
-            ], 401);
+                'response_index' => 'false',
+                'response_type' => 'Error',
+                'response_message' => [$exception->getMessage()]
+            ], 200);
         }
     }
 
@@ -192,14 +206,17 @@ class MenuController extends Controller
             $q->update($request->all());
 
             return response([
-                'success' => true,
-                'data' => $q
+                'response_index' => true,
+                'response_type' => 'Success',
+                'response_message' => [$q->name_sous_menu . ' Updated Successfully'],
+                'submenu_updated' => $q
             ]);
         }catch (\Exception $exception){
-            return response([
-                'success' => false,
-                'message' => $exception->getMessage()
-            ], 401);
+            response()->Json([
+                'response_index' => false,
+                'response_type' => 'Error',
+                'response_message' => [$exception->getMessage()]
+            ], 200);
         }
 
     }
@@ -207,18 +224,29 @@ class MenuController extends Controller
     // Delete Sous menu
     public function destroySmenu($id)
     {
+        $submenu = SousMenu::find($id);
+        //if auth user do not have 'Menu-delete' permission
+        if(Auth::user()->role_type !== 'administrator' && Auth::user()->cannot('delete', SousMenu::class)) {
+            return response()->json([
+                'response_index' => true,
+                'response_type' => 'Error',
+                'response_message' => ['You do not have permission to delete menu'],
+            ]);
+        }
         try{
-            $q=SousMenu::destroy($id);
+            $submenu->delete();
 
             return response([
-                'success' => true,
-                'data' => $q
+                'response_index' => true,
+                'response_type' => 'Success',
+                'response_message' => [$submenu->name_sous_menu . ' Deleted Successfully'],
             ]);
         }catch (\Exception $exception){
             return response([
-                'success' => false,
-                'message' => $exception->getMessage()
-            ], 401);
+                'response_index' => false,
+                'response_type' => 'Error',
+                'response_message' => [$exception->getMessage()]
+            ], 200);
         }
     }
 }

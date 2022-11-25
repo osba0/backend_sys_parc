@@ -49,4 +49,17 @@ class SubMenuPolicy
 
         return false;
     }
+
+    public function delete(User $user, SousMenu $menu)
+    {
+        $perms = $user->role->permissions->all();
+
+        foreach($perms as $perm) {
+            if($perm->name == 'SubMenu-delete') {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
